@@ -38,43 +38,72 @@ implies otherwise.
 
 ## Running it locally
 
-The quickest route is [Docker](#with-docker), which brings its own PostgreSQL.
-To run it directly you need Python 3.12, Node 22, PostgreSQL 16 and
-[uv](https://docs.astral.sh/uv/).
+```bash
+git clone https://github.com/Cabir181/Ztech-ERP.git
+cd Ztech-ERP && git checkout claude/new-session-8h1nxp
+
+./scripts/quickstart.sh
+```
+
+That is the whole thing. The script checks what is installed, creates the
+database and role, writes a `.env` with a freshly generated secret key,
+installs both dependency sets from their lockfiles, applies migrations, builds
+the interface, seeds the demo company and creates an administrator.
+
+It is safe to run again — every step checks whether it is already done and
+skips it. It never drops a database and never overwrites an existing `.env`.
+
+Then:
 
 ```bash
-git clone https://github.com/Cabir181/Ztech-ERP.git && cd Ztech-ERP
+./scripts/dev.sh serve          # http://127.0.0.1:8000
+./scripts/dev.sh worker         # in a second terminal, for background jobs
+```
 
-# 1. Create the database and its role. The application never creates these
-#    itself - it is not given rights to.
+Sign in at <http://127.0.0.1:8000> as `admin@example.com` with the password you
+chose. You will be asked to change it on first sign-in.
+
+### Prerequisites
+
+The script checks for these and tells you how to install whatever is missing.
+
+| | macOS | Debian / Ubuntu | Windows |
+|---|---|---|---|
+| Python 3.12 | `brew install python@3.12` | `sudo apt install python3.12 python3.12-venv` | Use WSL2, or the [Docker route](#with-docker) |
+| Node 22 | `brew install node@22` | [nodejs.org packages](https://nodejs.org/en/download/package-manager) | |
+| PostgreSQL 16 | `brew install postgresql@16 && brew services start postgresql@16` | `sudo apt install postgresql-16` | |
+| uv | `brew install uv` | `curl -LsSf https://astral.sh/uv/install.sh \| sh` | |
+
+On **Windows**, run the script from WSL2 or use Docker — it is a bash script and
+expects a Unix shell.
+
+### If you would rather do it by hand
+
+<details>
+<summary>The same steps, one at a time</summary>
+
+```bash
+# 1. Database and role. The application is never given rights to create these.
 sudo -u postgres psql -c "CREATE ROLE ztech LOGIN PASSWORD 'ztech' CREATEDB;"
 sudo -u postgres psql -c "CREATE DATABASE ztech_sales OWNER ztech;"
 
-# 2. Configure. Set POSTGRES_* to match step 1 and generate a secret key:
+# 2. Configure. Set POSTGRES_* to match, and generate a secret key with
 #    python -c "import secrets; print(secrets.token_urlsafe(64))"
 cp .env.example .env
 
 # 3. Install, migrate, seed
-./scripts/dev.sh setup          # virtualenv, locked dependencies, npm install
-./scripts/dev.sh migrate        # apply migrations to PostgreSQL
+./scripts/dev.sh setup
+./scripts/dev.sh migrate
 ZTECH_ADMIN_PASSWORD='Choose-A-Str0ng-Passw0rd!' ./scripts/dev.sh bootstrap
 
-# 4. Build the interface, then run
+# 4. Build the interface. Django serves it from frontend/dist, so without this
+#    "/" returns a plain message saying the interface has not been built.
 (cd frontend && npm run build)
-./scripts/dev.sh serve          # API + interface on http://127.0.0.1:8000
-./scripts/dev.sh worker         # in a second terminal: the outbox worker
+
+./scripts/dev.sh serve
 ```
 
-Then open <http://127.0.0.1:8000> and sign in as `admin@example.com` with the
-password you set in step 3. You will be asked to change it.
-
-`bootstrap` reads the administrator password from `ZTECH_ADMIN_PASSWORD`, or
-prompts for it. It is never taken as a command line argument, because arguments
-end up in shell history and in process listings.
-
-> Step 4's `npm run build` matters: Django serves the compiled interface from
-> `frontend/dist`. Without it, `/` returns a plain-text message saying the
-> interface has not been built, rather than failing obscurely.
+</details>
 
 For frontend work, run `./scripts/dev.sh ui` instead and open
 <http://127.0.0.1:5173>. The Vite dev server proxies `/api` to Django, so the
