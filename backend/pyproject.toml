@@ -1,0 +1,46 @@
+[project]
+name = "ztech-sales"
+version = "1.0.0"
+description = "Ztech Sales - independent commercial quote-to-order Sales application (Release 1)"
+requires-python = ">=3.12,<3.13"
+license = { text = "Proprietary" }
+
+dependencies = [
+    "Django==5.2.17",
+    "djangorestframework==3.18.1",
+    "psycopg[binary]==3.3.5",
+    "drf-spectacular==0.30.0",
+    "argon2-cffi==25.1.0",
+    "whitenoise==6.12.0",
+    "gunicorn==26.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.1.1",
+    "pytest-django==4.14.0",
+    "pytest-cov==7.1.0",
+    "ruff==0.16.7",
+]
+
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["ztech_sales*", "config*"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+exclude = ["**/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "DJ", "C4", "SIM"]
+ignore = ["B008", "SIM108"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py", "tests.py"]
+addopts = "-ra --strict-markers"
+testpaths = ["ztech_sales"]

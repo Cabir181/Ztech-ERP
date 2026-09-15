@@ -1,0 +1,43 @@
+# Secrets and per-environment configuration - never committed.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.egg-info/
+build/
+dist/
+
+# Django
+backend/staticfiles/*
+!backend/staticfiles/.gitkeep
+/var/
+media/
+
+# Node and the compiled frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+
+# Playwright run artefacts
+tests/browser/test-results/
+tests/browser/playwright-report/
+tests/browser/results.json
+
+# Local tooling
+.DS_Store
+.idea/
+.vscode/
+*.log

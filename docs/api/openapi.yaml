@@ -1,0 +1,1360 @@
+openapi: 3.0.3
+info:
+  title: Ztech Sales API
+  version: 1.0.0
+  description: Quote-to-order Sales application - Release 1.
+paths:
+  /api/audit-events/:
+    get:
+      operationId: audit_events_list
+      description: Read-only view of the immutable audit trail.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - audit-events
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAuditEventList'
+          description: ''
+  /api/audit-events/{id}/:
+    get:
+      operationId: audit_events_retrieve
+      description: Read-only view of the immutable audit trail.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this audit event.
+        required: true
+      tags:
+      - audit-events
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEvent'
+          description: ''
+  /api/auth/csrf/:
+    get:
+      operationId: auth_csrf_retrieve
+      description: Issue the CSRF cookie the interface echoes back in ``X-CSRFToken``.
+      tags:
+      - auth
+      security:
+      - {}
+      responses:
+        '200':
+          description: CSRF cookie set.
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: |-
+        Sign in with an email address and password.
+
+        CSRF protection is applied explicitly: DRF exempts unauthenticated requests
+        by default, which would leave the login form open to a login-CSRF attack.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Signed out.
+  /api/auth/password/:
+    post:
+      operationId: auth_password_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: Changed.
+  /api/auth/session/:
+    get:
+      operationId: auth_session_retrieve
+      description: Who is signed in, what they may do, and how to brand the interface.
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+  /api/company/:
+    get:
+      operationId: company_retrieve
+      description: The company this deployment serves. There is exactly one.
+      tags:
+      - company
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+          description: ''
+    patch:
+      operationId: company_partial_update
+      description: The company this deployment serves. There is exactly one.
+      tags:
+      - company
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCompanyRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCompanyRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+          description: ''
+  /api/roles/:
+    get:
+      operationId: roles_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - roles
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRoleList'
+          description: ''
+    post:
+      operationId: roles_create
+      tags:
+      - roles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RoleRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+  /api/roles/{id}/:
+    get:
+      operationId: roles_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this role.
+        required: true
+      tags:
+      - roles
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+    put:
+      operationId: roles_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this role.
+        required: true
+      tags:
+      - roles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RoleRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+    patch:
+      operationId: roles_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this role.
+        required: true
+      tags:
+      - roles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRoleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRoleRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+  /api/system/health/:
+    get:
+      operationId: system_health_retrieve
+      description: Liveness probe. Deliberately reveals nothing about the configuration.
+      tags:
+      - system
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+          description: ''
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+          description: ''
+  /api/system/permissions/:
+    get:
+      operationId: system_permissions_list
+      description: The full permission catalogue, used to build the role editor.
+      tags:
+      - system
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PermissionDef'
+          description: ''
+  /api/system/status/:
+    get:
+      operationId: system_status_retrieve
+      description: |-
+        Honest readiness detail for an operator.
+
+        Email in particular is reported as ``not_configured`` when no SMTP host is
+        set. The application never reports a message as sent because a console
+        backend accepted it.
+      tags:
+      - system
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemStatus'
+          description: ''
+  /api/users/:
+    get:
+      operationId: users_list
+      description: |-
+        User administration.
+
+        Accounts are never deleted: history must keep naming the person who acted.
+        Deactivating an account removes access immediately, including on a session
+        that is already open.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - users
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserList'
+          description: ''
+    post:
+      operationId: users_create
+      description: |-
+        User administration.
+
+        Accounts are never deleted: history must keep naming the person who acted.
+        Deactivating an account removes access immediately, including on a session
+        that is already open.
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/users/{id}/:
+    get:
+      operationId: users_retrieve
+      description: |-
+        User administration.
+
+        Accounts are never deleted: history must keep naming the person who acted.
+        Deactivating an account removes access immediately, including on a session
+        that is already open.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - users
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    put:
+      operationId: users_update
+      description: |-
+        User administration.
+
+        Accounts are never deleted: history must keep naming the person who acted.
+        Deactivating an account removes access immediately, including on a session
+        that is already open.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: users_partial_update
+      description: |-
+        User administration.
+
+        Accounts are never deleted: history must keep naming the person who acted.
+        Deactivating an account removes access immediately, including on a session
+        that is already open.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/users/me/:
+    get:
+      operationId: users_me_retrieve
+      description: |-
+        User administration.
+
+        Accounts are never deleted: history must keep naming the person who acted.
+        Deactivating an account removes access immediately, including on a session
+        that is already open.
+      tags:
+      - users
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+components:
+  schemas:
+    AuditEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        occurred_at:
+          type: string
+          format: date-time
+          readOnly: true
+        actor_label:
+          type: string
+          readOnly: true
+        action:
+          type: string
+          readOnly: true
+          description: For example quotation.issued.
+        entity_type:
+          type: string
+          readOnly: true
+          description: For example sales.quotation.
+        entity_id:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        entity_label:
+          type: string
+          readOnly: true
+        summary:
+          type: string
+          readOnly: true
+        changes:
+          readOnly: true
+          description: 'Field-level before/after values: {"field": {"from": ..., "to":
+            ...}}.'
+        request_id:
+          type: string
+          readOnly: true
+        ip_address:
+          type: string
+          readOnly: true
+          nullable: true
+        source:
+          type: string
+          readOnly: true
+          description: web, worker, command or integration.
+      required:
+      - action
+      - actor_label
+      - changes
+      - entity_id
+      - entity_label
+      - entity_type
+      - id
+      - ip_address
+      - occurred_at
+      - request_id
+      - source
+      - summary
+    Company:
+      type: object
+      description: |-
+        Adds the optimistic-locking ``version`` field.
+
+        ``version`` is read-only in the serializer and echoed back to the client on
+        every read. On update the client sends the version it last read in the
+        request body; the view compares it under a row lock and rejects a stale
+        write with HTTP 409 rather than overwriting someone else's change.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        code:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        legal_name:
+          type: string
+          maxLength: 200
+        trade_name:
+          type: string
+          maxLength: 200
+        display_name:
+          type: string
+          readOnly: true
+        currency:
+          allOf:
+          - $ref: '#/components/schemas/Currency'
+          readOnly: true
+        timezone:
+          type: string
+          description: IANA time zone of the legal entity. Date-sensitive business
+            rules - notably quotation expiry - are evaluated in this zone, not in
+            the viewer's zone.
+          maxLength: 64
+        tax_registration_number:
+          type: string
+          maxLength: 40
+        commercial_registration_number:
+          type: string
+          maxLength: 40
+        address_line1:
+          type: string
+          maxLength: 160
+        address_line2:
+          type: string
+          maxLength: 160
+        city:
+          type: string
+          maxLength: 80
+        region:
+          type: string
+          maxLength: 80
+        postal_code:
+          type: string
+          maxLength: 20
+        country_code:
+          type: string
+          description: ISO 3166-1 alpha-2 country code.
+          maxLength: 2
+        phone:
+          type: string
+          maxLength: 40
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        website:
+          type: string
+          maxLength: 200
+        brand_primary_color:
+          type: string
+          pattern: ^#[0-9A-Fa-f]{6}$
+          maxLength: 7
+        brand_accent_color:
+          type: string
+          pattern: ^#[0-9A-Fa-f]{6}$
+          maxLength: 7
+        logo_path:
+          type: string
+          readOnly: true
+          description: Path within this client's private storage scope. Never served
+            from a static URL.
+        document_footer:
+          type: string
+          description: Shown at the foot of customer documents. Never include internal
+            notes or approval policy.
+        is_active:
+          type: boolean
+          readOnly: true
+        version:
+          type: integer
+          readOnly: true
+      required:
+      - code
+      - currency
+      - display_name
+      - id
+      - is_active
+      - legal_name
+      - logo_path
+      - version
+    CompanyBranding:
+      type: object
+      description: The subset of company data the signed-in interface needs to render
+        itself.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        code:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        display_name:
+          type: string
+          readOnly: true
+        legal_name:
+          type: string
+          readOnly: true
+        timezone:
+          type: string
+          readOnly: true
+          description: IANA time zone of the legal entity. Date-sensitive business
+            rules - notably quotation expiry - are evaluated in this zone, not in
+            the viewer's zone.
+        currency_code:
+          type: string
+          readOnly: true
+        currency_symbol:
+          type: string
+          readOnly: true
+        decimal_places:
+          type: integer
+          readOnly: true
+        brand_primary_color:
+          type: string
+          readOnly: true
+        brand_accent_color:
+          type: string
+          readOnly: true
+      required:
+      - brand_accent_color
+      - brand_primary_color
+      - code
+      - currency_code
+      - currency_symbol
+      - decimal_places
+      - display_name
+      - id
+      - legal_name
+      - timezone
+    Currency:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        code:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        symbol:
+          type: string
+          readOnly: true
+        decimal_places:
+          type: integer
+          readOnly: true
+          description: Number of decimal places amounts are rounded to. OMR uses 3,
+            USD uses 2, JPY uses 0.
+        rounding_mode:
+          allOf:
+          - $ref: '#/components/schemas/RoundingModeEnum'
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+      required:
+      - code
+      - decimal_places
+      - id
+      - is_active
+      - name
+      - rounding_mode
+      - symbol
+    Health:
+      type: object
+      description: Liveness probe response. Deliberately carries no configuration
+        detail.
+      properties:
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
+        time:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - status
+      - time
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - email
+      - password
+    PaginatedAuditEventList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEvent'
+    PaginatedRoleList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+    PaginatedUserList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    PasswordChangeRequest:
+      type: object
+      properties:
+        current_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        new_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - current_password
+      - new_password
+    PatchedCompanyRequest:
+      type: object
+      description: |-
+        Adds the optimistic-locking ``version`` field.
+
+        ``version`` is read-only in the serializer and echoed back to the client on
+        every read. On update the client sends the version it last read in the
+        request body; the view compares it under a row lock and rejects a stale
+        write with HTTP 409 rather than overwriting someone else's change.
+      properties:
+        legal_name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        trade_name:
+          type: string
+          maxLength: 200
+        currency_id:
+          type: string
+          format: uuid
+          writeOnly: true
+        timezone:
+          type: string
+          minLength: 1
+          description: IANA time zone of the legal entity. Date-sensitive business
+            rules - notably quotation expiry - are evaluated in this zone, not in
+            the viewer's zone.
+          maxLength: 64
+        tax_registration_number:
+          type: string
+          maxLength: 40
+        commercial_registration_number:
+          type: string
+          maxLength: 40
+        address_line1:
+          type: string
+          maxLength: 160
+        address_line2:
+          type: string
+          maxLength: 160
+        city:
+          type: string
+          maxLength: 80
+        region:
+          type: string
+          maxLength: 80
+        postal_code:
+          type: string
+          maxLength: 20
+        country_code:
+          type: string
+          description: ISO 3166-1 alpha-2 country code.
+          maxLength: 2
+        phone:
+          type: string
+          maxLength: 40
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        website:
+          type: string
+          maxLength: 200
+        brand_primary_color:
+          type: string
+          minLength: 1
+          pattern: ^#[0-9A-Fa-f]{6}$
+          maxLength: 7
+        brand_accent_color:
+          type: string
+          minLength: 1
+          pattern: ^#[0-9A-Fa-f]{6}$
+          maxLength: 7
+        document_footer:
+          type: string
+          description: Shown at the foot of customer documents. Never include internal
+            notes or approval policy.
+    PatchedRoleRequest:
+      type: object
+      description: |-
+        Adds the optimistic-locking ``version`` field.
+
+        ``version`` is read-only in the serializer and echoed back to the client on
+        every read. On update the client sends the version it last read in the
+        request body; the view compares it under a row lock and rejects a stale
+        write with HTTP 409 rather than overwriting someone else's change.
+      properties:
+        code:
+          type: string
+          minLength: 1
+          pattern: ^[a-z0-9][a-z0-9_-]*$
+          maxLength: 48
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+        is_active:
+          type: boolean
+        permissions:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 64
+    PatchedUserRequest:
+      type: object
+      description: |-
+        Adds the optimistic-locking ``version`` field.
+
+        ``version`` is read-only in the serializer and echoed back to the client on
+        every read. On update the client sends the version it last read in the
+        request body; the view compares it under a row lock and rejects a stale
+        write with HTTP 409 rather than overwriting someone else's change.
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        full_name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        job_title:
+          type: string
+          maxLength: 120
+        phone:
+          type: string
+          maxLength: 40
+        is_active:
+          type: boolean
+          description: Inactive users cannot sign in and lose access immediately,
+            including on a session that is already open.
+        is_system_administrator:
+          type: boolean
+          description: Break-glass flag granting every permission except approval
+            authority, which must be granted through a role.
+        must_change_password:
+          type: boolean
+    PermissionDef:
+      type: object
+      properties:
+        code:
+          type: string
+        module:
+          type: string
+        label:
+          type: string
+        description:
+          type: string
+      required:
+      - code
+      - description
+      - label
+      - module
+    Role:
+      type: object
+      description: |-
+        Adds the optimistic-locking ``version`` field.
+
+        ``version`` is read-only in the serializer and echoed back to the client on
+        every read. On update the client sends the version it last read in the
+        request body; the view compares it under a row lock and rejects a stale
+        write with HTTP 409 rather than overwriting someone else's change.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        code:
+          type: string
+          pattern: ^[a-z0-9][a-z0-9_-]*$
+          maxLength: 48
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+        is_system:
+          type: boolean
+          readOnly: true
+          description: Seeded with the client environment. Its code cannot be changed
+            or deleted.
+        is_active:
+          type: boolean
+        permissions:
+          type: array
+          items:
+            type: string
+            maxLength: 64
+        assigned_user_count:
+          type: integer
+          readOnly: true
+        version:
+          type: integer
+          readOnly: true
+      required:
+      - assigned_user_count
+      - code
+      - id
+      - is_system
+      - name
+      - version
+    RoleRequest:
+      type: object
+      description: |-
+        Adds the optimistic-locking ``version`` field.
+
+        ``version`` is read-only in the serializer and echoed back to the client on
+        every read. On update the client sends the version it last read in the
+        request body; the view compares it under a row lock and rejects a stale
+        write with HTTP 409 rather than overwriting someone else's change.
+      properties:
+        code:
+          type: string
+          minLength: 1
+          pattern: ^[a-z0-9][a-z0-9_-]*$
+          maxLength: 48
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+        is_active:
+          type: boolean
+        permissions:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 64
+      required:
+      - code
+      - name
+    RoleSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        code:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          readOnly: true
+      required:
+      - code
+      - id
+      - name
+    RoundingModeEnum:
+      enum:
+      - half_up
+      - half_even
+      type: string
+      description: |-
+        * `half_up` - Half up
+        * `half_even` - Half even (banker's)
+    Session:
+      type: object
+      description: Everything the interface needs to render itself for the signed-in
+        user.
+      properties:
+        user:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        company:
+          allOf:
+          - $ref: '#/components/schemas/CompanyBranding'
+          readOnly: true
+        permissions:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        must_change_password:
+          type: boolean
+          readOnly: true
+      required:
+      - company
+      - must_change_password
+      - permissions
+      - user
+    StatusEnum:
+      enum:
+      - ok
+      - degraded
+      type: string
+      description: |-
+        * `ok` - ok
+        * `degraded` - degraded
+    SystemStatus:
+      type: object
+      description: Operator-facing readiness detail, gated on ``settings.view``.
+      properties:
+        client_code:
+          type: string
+          readOnly: true
+        release:
+          type: string
+          readOnly: true
+        debug:
+          type: boolean
+          readOnly: true
+        database:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        email:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        attachment_scanning:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        private_storage_root:
+          type: string
+          readOnly: true
+      required:
+      - attachment_scanning
+      - client_code
+      - database
+      - debug
+      - email
+      - private_storage_root
+      - release
+    User:
+      type: object
+      description: |-
+        Adds the optimistic-locking ``version`` field.
+
+        ``version`` is read-only in the serializer and echoed back to the client on
+        every read. On update the client sends the version it last read in the
+        request body; the view compares it under a row lock and rejects a stale
+        write with HTTP 409 rather than overwriting someone else's change.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        full_name:
+          type: string
+          maxLength: 150
+        job_title:
+          type: string
+          maxLength: 120
+        phone:
+          type: string
+          maxLength: 40
+        is_active:
+          type: boolean
+          description: Inactive users cannot sign in and lose access immediately,
+            including on a session that is already open.
+        is_system_administrator:
+          type: boolean
+          description: Break-glass flag granting every permission except approval
+            authority, which must be granted through a role.
+        must_change_password:
+          type: boolean
+        is_locked:
+          type: boolean
+          readOnly: true
+        last_login:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleSummary'
+          readOnly: true
+        version:
+          type: integer
+          readOnly: true
+      required:
+      - date_joined
+      - email
+      - full_name
+      - id
+      - is_locked
+      - last_login
+      - roles
+      - version
+    UserRequest:
+      type: object
+      description: |-
+        Adds the optimistic-locking ``version`` field.
+
+        ``version`` is read-only in the serializer and echoed back to the client on
+        every read. On update the client sends the version it last read in the
+        request body; the view compares it under a row lock and rejects a stale
+        write with HTTP 409 rather than overwriting someone else's change.
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        full_name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        job_title:
+          type: string
+          maxLength: 120
+        phone:
+          type: string
+          maxLength: 40
+        is_active:
+          type: boolean
+          description: Inactive users cannot sign in and lose access immediately,
+            including on a session that is already open.
+        is_system_administrator:
+          type: boolean
+          description: Break-glass flag granting every permission except approval
+            authority, which must be granted through a role.
+        must_change_password:
+          type: boolean
+      required:
+      - email
+      - full_name
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: ztech_sessionid

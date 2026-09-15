@@ -1,0 +1,88 @@
+# ---------------------------------------------------------------------------
+# Local development stack for Ztech Sales.
+#
+#   docker compose up --build          start the whole stack
+#   docker compose run --rm web migrate    apply migrations
+#
+# Mailpit stands in for a mail provider so that development never sends a
+# message to a real address. Its inbox is at http://localhost:8025.
+# ---------------------------------------------------------------------------
+name: ztech-sales
+
+x-app-environment: &app-environment
+  CLIENT_CODE: ${CLIENT_CODE:-local}
+  DJANGO_SETTINGS_MODULE: config.settings.dev
+  DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-development-only-secret-not-for-deployment}
+  DJANGO_DEBUG: "true"
+  DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,web,0.0.0.0
+  DJANGO_CSRF_TRUSTED_ORIGINS: http://localhost:8000,http://localhost:5173
+  POSTGRES_DB: ${POSTGRES_DB:-ztech_sales}
+  POSTGRES_USER: ${POSTGRES_USER:-ztech}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ztech}
+  POSTGRES_HOST: db
+  POSTGRES_PORT: "5432"
+  PRIVATE_STORAGE_ROOT: /var/lib/ztech-sales/private
+  ATTACHMENT_SCANNER: stub
+  EMAIL_HOST: mail
+  EMAIL_PORT: "1025"
+  EMAIL_USE_TLS: "false"
+  DEFAULT_FROM_EMAIL: sales@example.invalid
+
+services:
+  db:
+    image: postgres:16-bookworm
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ztech_sales}
+      POSTGRES_USER: ${POSTGRES_USER:-ztech}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ztech}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PUBLISHED_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ztech} -d ${POSTGRES_DB:-ztech_sales}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mail:
+    # Test inbox only. Nothing here ever reaches a real recipient.
+    image: axllent/mailpit:latest
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+    ports:
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+
+  web:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
+    environment: *app-environment
+    volumes:
+      - private-files:/var/lib/ztech-sales/private
+    ports:
+      - "${WEB_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      mail:
+        condition: service_started
+
+  worker:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
+    command: ["worker"]
+    environment: *app-environment
+    volumes:
+      # The worker renders documents into the same private storage scope the
+      # web process serves them from.
+      - private-files:/var/lib/ztech-sales/private
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
+  private-files:
