@@ -38,23 +38,43 @@ implies otherwise.
 
 ## Running it locally
 
-Requires Python 3.12, Node 22, PostgreSQL 16 and [uv](https://docs.astral.sh/uv/).
+The quickest route is [Docker](#with-docker), which brings its own PostgreSQL.
+To run it directly you need Python 3.12, Node 22, PostgreSQL 16 and
+[uv](https://docs.astral.sh/uv/).
 
 ```bash
-git clone <this repository> && cd Ztech-ERP
-cp .env.example .env            # then edit POSTGRES_* and DJANGO_SECRET_KEY
+git clone https://github.com/Cabir181/Ztech-ERP.git && cd Ztech-ERP
 
-./scripts/dev.sh setup          # create the virtualenv, install locked deps, npm install
+# 1. Create the database and its role. The application never creates these
+#    itself - it is not given rights to.
+sudo -u postgres psql -c "CREATE ROLE ztech LOGIN PASSWORD 'ztech' CREATEDB;"
+sudo -u postgres psql -c "CREATE DATABASE ztech_sales OWNER ztech;"
+
+# 2. Configure. Set POSTGRES_* to match step 1 and generate a secret key:
+#    python -c "import secrets; print(secrets.token_urlsafe(64))"
+cp .env.example .env
+
+# 3. Install, migrate, seed
+./scripts/dev.sh setup          # virtualenv, locked dependencies, npm install
 ./scripts/dev.sh migrate        # apply migrations to PostgreSQL
-./scripts/dev.sh bootstrap      # create the demo company, roles, sequences and an administrator
+ZTECH_ADMIN_PASSWORD='Choose-A-Str0ng-Passw0rd!' ./scripts/dev.sh bootstrap
 
+# 4. Build the interface, then run
+(cd frontend && npm run build)
 ./scripts/dev.sh serve          # API + interface on http://127.0.0.1:8000
 ./scripts/dev.sh worker         # in a second terminal: the outbox worker
 ```
 
+Then open <http://127.0.0.1:8000> and sign in as `admin@example.com` with the
+password you set in step 3. You will be asked to change it.
+
 `bootstrap` reads the administrator password from `ZTECH_ADMIN_PASSWORD`, or
 prompts for it. It is never taken as a command line argument, because arguments
 end up in shell history and in process listings.
+
+> Step 4's `npm run build` matters: Django serves the compiled interface from
+> `frontend/dist`. Without it, `/` returns a plain-text message saying the
+> interface has not been built, rather than failing obscurely.
 
 For frontend work, run `./scripts/dev.sh ui` instead and open
 <http://127.0.0.1:5173>. The Vite dev server proxies `/api` to Django, so the
@@ -62,6 +82,9 @@ browser still sees one origin and the session and CSRF cookies behave exactly as
 they do in production.
 
 ### With Docker
+
+Brings its own PostgreSQL and a test mail inbox, so there is nothing to install
+first beyond Docker itself.
 
 ```bash
 docker compose up --build
